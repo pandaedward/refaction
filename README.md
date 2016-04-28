@@ -1,7 +1,5 @@
 # refaction
-A terribly written Web API project that can be used as a test for potential C# applicants.
-
-It's terrible on purpose, so that you can check to see if your applicant has chops or not.
+A terribly written Web API project that can be used as a test for potential C# applicants.  It's terrible on purpose, so that you can show us how we can improve it.
 
 ## Getting started for applicants
 
