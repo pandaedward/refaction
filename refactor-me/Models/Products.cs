@@ -16,17 +16,13 @@ namespace refactor_me.Models
 
         public Products(string name)
         {
-            LoadProducts($"where lower(name) like '%{name.ToLower()}%'");
+            LoadProducts("where lower(name) like '%{name.ToLower()}%'");
         }
 
         private void LoadProducts(string where)
         {
             Items = new List<Product>();
-            var conn = Helpers.NewConnection();
-            var cmd = new SqlCommand($"select id from product {where}", conn);
-            conn.Open();
-
-            var rdr = cmd.ExecuteReader();
+            var rdr = Helpers.ExecuteReader("select id from product {where}");
             while (rdr.Read())
             {
                 var id = Guid.Parse(rdr["id"].ToString());
@@ -34,7 +30,6 @@ namespace refactor_me.Models
             }
         }
     }
-
     public class Product
     {
         public Guid Id { get; set; }
@@ -48,7 +43,7 @@ namespace refactor_me.Models
         public decimal DeliveryPrice { get; set; }
         
         [JsonIgnore]
-        public bool IsNew { get; }
+        public bool IsNew { get; set;}
 
         public Product()
         {
@@ -59,11 +54,7 @@ namespace refactor_me.Models
         public Product(Guid id)
         {
             IsNew = true;
-            var conn = Helpers.NewConnection();
-            var cmd = new SqlCommand($"select * from product where id = '{id}'", conn);
-            conn.Open();
-
-            var rdr = cmd.ExecuteReader();
+            var rdr = Helpers.ExecuteReader("select * from product where id = '{id}'");
             if (!rdr.Read())
                 return;
 
@@ -77,13 +68,10 @@ namespace refactor_me.Models
 
         public void Save()
         {
-            var conn = Helpers.NewConnection();
-            var cmd = IsNew ? 
-                new SqlCommand($"insert into product (id, name, description, price, deliveryprice) values ('{Id}', '{Name}', '{Description}', {Price}, {DeliveryPrice})", conn) : 
-                new SqlCommand($"update product set name = '{Name}', description = '{Description}', price = {Price}, deliveryprice = {DeliveryPrice} where id = '{Id}'", conn);
-
-            conn.Open();
-            cmd.ExecuteNonQuery();
+          
+            int cmd = IsNew ? 
+                Helpers.ExecuteQuery("insert into product (id, name, description, price, deliveryprice) values ('{Id}', '{Name}', '{Description}', {Price}, {DeliveryPrice})") : 
+                Helpers.ExecuteQuery("update product set name = '{Name}', description = '{Description}', price = {Price}, deliveryprice = {DeliveryPrice} where id = '{Id}'");
         }
 
         public void Delete()
@@ -91,10 +79,7 @@ namespace refactor_me.Models
             foreach (var option in new ProductOptions(Id).Items)
                 option.Delete();
 
-            var conn = Helpers.NewConnection();
-            conn.Open();
-            var cmd = new SqlCommand($"delete from product where id = '{Id}'", conn);
-            cmd.ExecuteNonQuery();
+            Helpers.ExecuteQuery("delete from product where id = '{Id}'");
         }
     }
 
@@ -109,17 +94,13 @@ namespace refactor_me.Models
 
         public ProductOptions(Guid productId)
         {
-            LoadProductOptions($"where productid = '{productId}'");
+            LoadProductOptions("where productid = '{productId}'");
         }
 
         private void LoadProductOptions(string where)
         {
             Items = new List<ProductOption>();
-            var conn = Helpers.NewConnection();
-            var cmd = new SqlCommand($"select id from productoption {where}", conn);
-            conn.Open();
-
-            var rdr = cmd.ExecuteReader();
+            var rdr = Helpers.ExecuteReader("select id from productoption {where}");
             while (rdr.Read())
             {
                 var id = Guid.Parse(rdr["id"].ToString());
@@ -139,7 +120,7 @@ namespace refactor_me.Models
         public string Description { get; set; }
 
         [JsonIgnore]
-        public bool IsNew { get; }
+        public bool IsNew { get; set;}
 
         public ProductOption()
         {
@@ -150,11 +131,8 @@ namespace refactor_me.Models
         public ProductOption(Guid id)
         {
             IsNew = true;
-            var conn = Helpers.NewConnection();
-            var cmd = new SqlCommand($"select * from productoption where id = '{id}'", conn);
-            conn.Open();
+            var rdr = Helpers.ExecuteReader("select * from productoption where id = '{id}'");
 
-            var rdr = cmd.ExecuteReader();
             if (!rdr.Read())
                 return;
 
@@ -167,21 +145,15 @@ namespace refactor_me.Models
 
         public void Save()
         {
-            var conn = Helpers.NewConnection();
-            var cmd = IsNew ?
-                new SqlCommand($"insert into productoption (id, productid, name, description) values ('{Id}', '{ProductId}', '{Name}', '{Description}')", conn) :
-                new SqlCommand($"update productoption set name = '{Name}', description = '{Description}' where id = '{Id}'", conn);
-
-            conn.Open();
-            cmd.ExecuteNonQuery();
+            
+            int res = IsNew ?
+                Helpers.ExecuteQuery("insert into productoption (id, productid, name, description) values ('{Id}', '{ProductId}', '{Name}', '{Description}')") :
+                Helpers.ExecuteQuery("update productoption set name = '{Name}', description = '{Description}' where id = '{Id}'");
         }
 
         public void Delete()
         {
-            var conn = Helpers.NewConnection();
-            conn.Open();
-            var cmd = new SqlCommand($"delete from productoption where id = '{Id}'", conn);
-            cmd.ExecuteReader();
+            Helpers.ExecuteQuery("delete from productoption where id = '{Id}'");
         }
     }
 }
